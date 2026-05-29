@@ -145,36 +145,12 @@ Future<void> loadSpaces() async {
 
     final loadedSpaces =
         snapshot.docs.map(
+
       (doc) {
 
-        final data =
-            doc.data();
-
-        return SpaceModel(
-
-          id: doc.id,
-
-          title:
-              data["title"] ?? "",
-
-          description:
-              data["description"] ?? "",
-
-          budget:
-              ((data["budget"] ?? 0)
-                      as num)
-                  .toDouble(),
-
-          budgetPeriod:
-              data["budgetPeriod"] ??
-                  "Monthly",
-
-          color: Color(
-            data["color"] ??
-                AppColors
-                    .primary
-                    .value,
-          ),
+        return SpaceModel.fromMap(
+          doc.data(),
+          doc.id,
         );
       },
     ).toList();
@@ -589,25 +565,19 @@ Future<void> loadSpaces() async {
                                                   SpaceCard(
 
                                                 title:
-                                                    space.title,
+                                                    space.name,
 
                                                 totalBalance:
-                                                    currencyFormatter.format(
-                                                  space.budget,
-                                                ),
+                                                    space.budget,
 
                                                 budget:
-                                                    currencyFormatter.format(
-                                                  space.budget,
-                                                ),
+                                                    space.budget,
 
                                                 used:
-                                                    currencyFormatter.format(
-                                                  0,
-                                                ),
+                                                    0,
 
                                                 color:
-                                                    space.color,
+                                                    AppColors.primary,
 
                                                 expanded:
                                                     expanded,
@@ -668,7 +638,7 @@ Future<void> loadSpaces() async {
                                                     BoxShadow(
 
                                                       color:
-                                                          space.color.withOpacity(
+                                                          AppColors.primary.withOpacity(
                                                         .35,
                                                       ),
 

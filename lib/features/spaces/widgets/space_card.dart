@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class SpaceCard extends StatelessWidget {
   final String title;
-  final String totalBalance;
-  final String budget;
-  final String used;
+  final double totalBalance;
+  final double budget;
+  final double used;
 
   final bool expanded;
   final VoidCallback onTap;
 
   final Color color;
 
-  const SpaceCard({
+  SpaceCard({
     super.key,
     required this.title,
     required this.totalBalance,
@@ -21,6 +22,13 @@ class SpaceCard extends StatelessWidget {
     required this.onTap,
     required this.color,
   });
+
+  final currencyFormatter =
+    NumberFormat.currency(
+      locale: "id_ID",
+      symbol: "Rp ",
+      decimalDigits: 0,
+    );
 
   @override
   Widget build(BuildContext context) {
@@ -198,7 +206,9 @@ class SpaceCard extends StatelessWidget {
 
                       Text(
 
-                        totalBalance,
+                        currencyFormatter.format(
+                          totalBalance,
+                        ),
 
                         style:
                             const TextStyle(

@@ -1,8 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
+import 'package:flutter/material.dart';
+
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/constants/colors.dart';
@@ -18,14 +22,17 @@ class CreateSpacePage extends StatefulWidget {
 class _CreateSpacePageState
     extends State<CreateSpacePage> {
 
-  final titleController =
-      TextEditingController();
+  final TextEditingController
+      nameController =
+          TextEditingController();
 
-  final descriptionController =
-      TextEditingController();
+  final TextEditingController
+      descriptionController =
+          TextEditingController();
 
-  final budgetController =
-      TextEditingController();
+  final TextEditingController
+      budgetController =
+          TextEditingController();
 
   final formatter =
       NumberFormat.currency(
@@ -33,12 +40,6 @@ class _CreateSpacePageState
     symbol: "Rp ",
     decimalDigits: 0,
   );
-
-  String selectedType =
-      "Personal";
-
-  String selectedPeriod =
-      "Monthly";
 
   Color selectedColor =
       AppColors.primary;
@@ -52,10 +53,15 @@ class _CreateSpacePageState
     Colors.red,
   ];
 
+  File? selectedImage;
+
+  bool isLoading =
+      false;
+
   @override
   void dispose() {
 
-    titleController.dispose();
+    nameController.dispose();
 
     descriptionController.dispose();
 
@@ -73,7 +79,12 @@ class _CreateSpacePageState
       '',
     );
 
-    if (value.isEmpty) return;
+    if (value.isEmpty) {
+
+      budgetController.clear();
+
+      return;
+    }
 
     final number =
         int.parse(value);
@@ -85,13 +96,207 @@ class _CreateSpacePageState
 
     budgetController.value =
         TextEditingValue(
-      text: formatted,
+
+      text:
+          formatted,
+
       selection:
           TextSelection.collapsed(
         offset:
             formatted.length,
       ),
     );
+  }
+
+  Future<void> pickImage() async {
+
+    try {
+
+      final picker =
+          ImagePicker();
+
+      final image =
+          await picker.pickImage(
+
+        source:
+            ImageSource.gallery,
+
+        imageQuality:
+            75,
+      );
+
+      if (image == null) {
+        return;
+      }
+
+      setState(() {
+
+        selectedImage =
+            File(image.path);
+      });
+
+    } catch (e) {
+
+      debugPrint(
+        "IMAGE PICK ERROR: $e",
+      );
+    }
+  }
+
+  Future<void> createSpace() async {
+
+    if (nameController.text
+        .trim()
+        .isEmpty) {
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+
+        const SnackBar(
+          content: Text(
+            "Space name required",
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    setState(() {
+
+      isLoading = true;
+    });
+
+    try {
+
+      final cleanBudget =
+          budgetController.text
+              .replaceAll(
+                RegExp(
+                  r'[^0-9]',
+                ),
+                '',
+              );
+
+      final budget =
+          double.tryParse(
+                cleanBudget,
+              ) ??
+              0;
+
+      final user =
+          FirebaseAuth
+              .instance
+              .currentUser;
+
+      if (user == null) {
+        return;
+      }
+
+      String? imageUrl;
+
+      if (selectedImage != null) {
+
+        final fileName =
+            DateTime.now()
+                .millisecondsSinceEpoch
+                .toString();
+
+        final ref =
+            FirebaseStorage
+                .instance
+                .ref()
+                .child(
+                  "spaces/$fileName.jpg",
+                );
+
+        await ref.putFile(
+          selectedImage!,
+        );
+
+        imageUrl =
+            await ref.getDownloadURL();
+      }
+
+      await FirebaseFirestore
+          .instance
+          .collection(
+            "spaces",
+          )
+          .add({
+
+        "name":
+            nameController.text
+                .trim(),
+
+        "description":
+            descriptionController
+                .text
+                .trim(),
+
+        "budget":
+            budget,
+
+        "budgetPeriod":
+            "Monthly",
+
+        "type":
+            "Shared",
+
+        "color":
+            selectedColor.value,
+
+        "ownerId":
+            user.uid,
+
+        "members": [
+          user.uid,
+        ],
+
+        "coverUrl":
+            imageUrl,
+
+        "wishlist": [],
+
+        "createdAt":
+            Timestamp.now(),
+      });
+
+      if (!mounted) return;
+
+      Navigator.pop(
+        context,
+      );
+
+    } catch (e) {
+
+      debugPrint(
+        "CREATE SPACE ERROR: $e",
+      );
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(
+
+        SnackBar(
+          content: Text(
+            "Failed: $e",
+          ),
+        ),
+      );
+
+    } finally {
+
+      if (mounted) {
+
+        setState(() {
+
+          isLoading =
+              false;
+        });
+      }
+    }
   }
 
   @override
@@ -105,14 +310,16 @@ class _CreateSpacePageState
 
       body: SafeArea(
 
-        child: SingleChildScrollView(
+        child:
+            SingleChildScrollView(
 
           padding:
               const EdgeInsets.all(
             24,
           ),
 
-          child: Column(
+          child:
+              Column(
 
             crossAxisAlignment:
                 CrossAxisAlignment.start,
@@ -128,11 +335,14 @@ class _CreateSpacePageState
                     onPressed: () {
 
                       Navigator.pop(
-                          context);
+                        context,
+                      );
                     },
 
                     icon: Icon(
+
                       Icons.arrow_back,
+
                       color:
                           AppColors
                               .textPrimary,
@@ -161,9 +371,9 @@ class _CreateSpacePageState
 
                     child:
                         const Icon(
-                      Icons.more_horiz,
+                      Icons.groups_rounded,
                     ),
-                  )
+                  ),
                 ],
               ),
 
@@ -175,7 +385,8 @@ class _CreateSpacePageState
 
                 "Create Space",
 
-                style: TextStyle(
+                style:
+                    TextStyle(
 
                   fontSize: 30,
 
@@ -189,17 +400,36 @@ class _CreateSpacePageState
               ),
 
               const SizedBox(
-                height: 30,
+                height: 10,
               ),
 
-              // TITLE
+              Text(
+
+                "Build deeper connections together",
+
+                style:
+                    TextStyle(
+
+                  color:
+                      AppColors
+                          .textSecondary,
+
+                  fontSize: 14,
+                ),
+              ),
+
+              const SizedBox(
+                height: 35,
+              ),
 
               buildSection(
+
                 "Space Name",
+
                 TextField(
 
                   controller:
-                      titleController,
+                      nameController,
 
                   decoration:
                       inputStyle(
@@ -212,13 +442,9 @@ class _CreateSpacePageState
                 height: 25,
               ),
 
-              const SizedBox(
-                height: 25,
-              ),
-
               buildSection(
 
-                "Description",
+                "Description (Optional)",
 
                 TextField(
 
@@ -234,7 +460,9 @@ class _CreateSpacePageState
                 ),
               ),
 
-              // BUDGET
+              const SizedBox(
+                height: 25,
+              ),
 
               buildSection(
 
@@ -294,70 +522,6 @@ class _CreateSpacePageState
 
               buildSection(
 
-                "Space Type",
-
-                Row(
-
-                  children: [
-
-                    buildTypeCard(
-                      "Personal",
-                      Icons.person,
-                    ),
-
-                    const SizedBox(
-                      width: 12,
-                    ),
-
-                    buildTypeCard(
-                      "Shared",
-                      Icons.groups,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(
-                height: 25,
-              ),
-
-              buildSection(
-
-                "Budget Period",
-
-                Container(
-
-                  padding:
-                      const EdgeInsets.all(
-                    6,
-                  ),
-
-                  decoration:
-                      pillDecoration(),
-
-                  child: Row(
-
-                    children: [
-
-                      buildPeriod(
-                          "Daily"),
-
-                      buildPeriod(
-                          "Weekly"),
-
-                      buildPeriod(
-                          "Monthly"),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(
-                height: 25,
-              ),
-
-              buildSection(
-
                 "Theme Color",
 
                 Wrap(
@@ -376,13 +540,11 @@ class _CreateSpacePageState
 
                         onTap: () {
 
-                          setState(
-                            () {
+                          setState(() {
 
-                              selectedColor =
-                                  color;
-                            },
-                          );
+                            selectedColor =
+                                color;
+                          });
                         },
 
                         child:
@@ -420,24 +582,120 @@ class _CreateSpacePageState
 
                             boxShadow: [
 
-                              if(selected)
+                              if (selected)
 
-                              BoxShadow(
+                                BoxShadow(
 
-                                color:
-                                    color.withOpacity(
-                                  .6,
+                                  color:
+                                      color.withOpacity(
+                                    .6,
+                                  ),
+
+                                  blurRadius:
+                                      20,
                                 ),
-
-                                blurRadius:
-                                    20,
-                              )
                             ],
                           ),
                         ),
                       );
                     },
                   ).toList(),
+                ),
+              ),
+
+              const SizedBox(
+                height: 25,
+              ),
+
+              buildSection(
+
+                "Cover Image (Optional)",
+
+                GestureDetector(
+
+                  onTap:
+                      pickImage,
+
+                  child:
+                      Container(
+
+                    height: 180,
+
+                    decoration:
+                        BoxDecoration(
+
+                      color:
+                          const Color(
+                        0xFF151A24,
+                      ),
+
+                      borderRadius:
+                          BorderRadius.circular(
+                        28,
+                      ),
+                    ),
+
+                    child:
+                        selectedImage !=
+                                null
+
+                            ? ClipRRect(
+
+                                borderRadius:
+                                    BorderRadius.circular(
+                                  28,
+                                ),
+
+                                child:
+                                    Image.file(
+
+                                  selectedImage!,
+
+                                  fit:
+                                      BoxFit.cover,
+
+                                  width:
+                                      double.infinity,
+                                ),
+                              )
+
+                            : Column(
+
+                                mainAxisAlignment:
+                                    MainAxisAlignment.center,
+
+                                children: [
+
+                                  Icon(
+
+                                    Icons.image_rounded,
+
+                                    size:
+                                        42,
+
+                                    color:
+                                        AppColors.primary,
+                                  ),
+
+                                  const SizedBox(
+                                    height:
+                                        12,
+                                  ),
+
+                                  Text(
+
+                                    "Add Cover Image",
+
+                                    style:
+                                        TextStyle(
+
+                                      color:
+                                          AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                  ),
                 ),
               ),
 
@@ -455,108 +713,10 @@ class _CreateSpacePageState
                 child:
                     ElevatedButton(
 
-                      onPressed: () async {
-
-                        if (titleController.text
-                            .trim()
-                            .isEmpty) {
-
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(
-
-                            const SnackBar(
-                              content: Text(
-                                "Space name required",
-                              ),
-                            ),
-                          );
-
-                          return;
-                        }
-
-                        try {
-
-                          final cleanBudget =
-                              budgetController.text
-                                  .replaceAll(
-                                    RegExp(r'[^0-9]'),
-                                    '',
-                                  );
-
-                          final budget =
-                              double.tryParse(
-                                    cleanBudget,
-                                  ) ??
-                                  0;
-
-                          final user =
-                              FirebaseAuth
-                                  .instance
-                                  .currentUser;
-
-                          if (user == null) {
-                            return;
-                          }
-
-                          await FirebaseFirestore
-                              .instance
-                              .collection(
-                                "spaces",
-                              )
-                              .add({
-
-                            "title":
-                                titleController.text
-                                    .trim(),
-
-                            "description":
-                                descriptionController.text
-                                    .trim(),
-
-                            "budget":
-                                budget,
-
-                            "budgetPeriod":
-                                selectedPeriod,
-
-                            "type":
-                                selectedType,
-
-                            "color":
-                                selectedColor.value,
-
-                            "ownerId":
-                                user.uid,
-
-                            "createdAt":
-                                FieldValue.serverTimestamp(),
-                          });
-
-                          if (!mounted) return;
-
-                          Navigator.pop(
-                            context,
-                          );
-
-                        } catch (e) {
-
-                          debugPrint(
-                            e.toString(),
-                          );
-
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(
-
-                            SnackBar(
-                              content: Text(
-                                "Failed: $e",
-                              ),
-                            ),
-                          );
-                        }
-                      },
+                  onPressed:
+                      isLoading
+                          ? null
+                          : createSpace,
 
                   style:
                       ElevatedButton.styleFrom(
@@ -564,6 +724,8 @@ class _CreateSpacePageState
                     backgroundColor:
                         AppColors
                             .primary,
+
+                    elevation: 0,
 
                     shape:
                         RoundedRectangleBorder(
@@ -576,23 +738,46 @@ class _CreateSpacePageState
                   ),
 
                   child:
-                      const Text(
+                      isLoading
 
-                    "Continue",
+                          ? const SizedBox(
 
-                    style:
-                        TextStyle(
+                              width: 24,
+                              height: 24,
 
-                      fontSize: 16,
+                              child:
+                                  CircularProgressIndicator(
 
-                      fontWeight:
-                          FontWeight.w600,
+                                strokeWidth:
+                                    2,
 
-                      color:
-                          Colors.white,
-                    ),
-                  ),
+                                color:
+                                    Colors.white,
+                              ),
+                            )
+
+                          : const Text(
+
+                              "Create Space",
+
+                              style:
+                                  TextStyle(
+
+                                fontSize:
+                                    16,
+
+                                fontWeight:
+                                    FontWeight.w600,
+
+                                color:
+                                    Colors.white,
+                              ),
+                            ),
                 ),
+              ),
+
+              const SizedBox(
+                height: 80,
               ),
             ],
           ),
@@ -635,142 +820,6 @@ class _CreateSpacePageState
     );
   }
 
-  Widget buildTypeCard(
-      String text,
-      IconData icon) {
-
-    final selected =
-        selectedType ==
-            text;
-
-    return Expanded(
-
-      child:
-          GestureDetector(
-
-        onTap: () {
-
-          setState(
-            () {
-
-              selectedType =
-                  text;
-            },
-          );
-        },
-
-        child:
-            AnimatedContainer(
-
-          duration:
-              const Duration(
-            milliseconds: 250,
-          ),
-
-          padding:
-              const EdgeInsets.all(
-            18,
-          ),
-
-          decoration:
-              BoxDecoration(
-
-            color:
-                selected
-
-                    ? AppColors
-                        .primary
-
-                    : const Color(
-                        0xFF151A24,
-                      ),
-
-            borderRadius:
-                BorderRadius.circular(
-              24,
-            ),
-          ),
-
-          child: Column(
-
-            children: [
-
-              Icon(
-                icon,
-                color:
-                    Colors.white,
-              ),
-
-              const SizedBox(
-                height: 8,
-              ),
-
-              Text(
-                text,
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildPeriod(
-      String text) {
-
-    final selected =
-        selectedPeriod ==
-            text;
-
-    return Expanded(
-
-      child:
-          GestureDetector(
-
-        onTap: () {
-
-          setState(
-            () {
-
-              selectedPeriod =
-                  text;
-            },
-          );
-        },
-
-        child:
-            Container(
-
-          padding:
-              const EdgeInsets.symmetric(
-            vertical: 14,
-          ),
-
-          decoration:
-              BoxDecoration(
-
-            color:
-                selected
-
-                    ? Colors.blue
-
-                    : Colors.transparent,
-
-            borderRadius:
-                BorderRadius.circular(
-              30,
-            ),
-          ),
-
-          child: Center(
-            child:
-                Text(text),
-          ),
-        ),
-      ),
-    );
-  }
-
   BoxDecoration pillDecoration() {
 
     return BoxDecoration(
@@ -794,6 +843,14 @@ class _CreateSpacePageState
 
       hintText: hint,
 
+      hintStyle:
+          TextStyle(
+
+        color:
+            AppColors
+                .textSecondary,
+      ),
+
       filled: true,
 
       fillColor:
@@ -811,6 +868,36 @@ class _CreateSpacePageState
 
         borderSide:
             BorderSide.none,
+      ),
+
+      enabledBorder:
+          OutlineInputBorder(
+
+        borderRadius:
+            BorderRadius.circular(
+          28,
+        ),
+
+        borderSide:
+            BorderSide.none,
+      ),
+
+      focusedBorder:
+          OutlineInputBorder(
+
+        borderRadius:
+            BorderRadius.circular(
+          28,
+        ),
+
+        borderSide:
+            BorderSide(
+
+          color:
+              AppColors.primary,
+
+          width: 1.4,
+        ),
       ),
     );
   }
