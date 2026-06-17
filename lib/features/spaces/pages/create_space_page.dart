@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import '../services/image_service.dart';
 
 import 'package:flutter/material.dart';
 
@@ -198,25 +198,11 @@ class _CreateSpacePageState
 
       if (selectedImage != null) {
 
-        final fileName =
-            DateTime.now()
-                .millisecondsSinceEpoch
-                .toString();
-
-        final ref =
-            FirebaseStorage
-                .instance
-                .ref()
-                .child(
-                  "spaces/$fileName.jpg",
-                );
-
-        await ref.putFile(
+        imageUrl =
+            await ImageService
+                .uploadSpaceCover(
           selectedImage!,
         );
-
-        imageUrl =
-            await ref.getDownloadURL();
       }
 
       await FirebaseFirestore
@@ -235,11 +221,9 @@ class _CreateSpacePageState
                 .text
                 .trim(),
 
-        "budget":
-            budget,
-
-        "budgetPeriod":
-            "Monthly",
+        "balance": budget,
+        "spendingLimit": budget,
+        "limitCycle": "Monthly",
 
         "type":
             "Shared",

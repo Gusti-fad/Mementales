@@ -3,11 +3,19 @@ import 'package:intl/intl.dart';
 
 class SpaceCard extends StatelessWidget {
   final String title;
+
   final double totalBalance;
-  final double budget;
+
+  final double spendingLimit;
+
   final double used;
 
+  final int memberCount;
+
+  final String limitCycle;
+
   final bool expanded;
+
   final VoidCallback onTap;
 
   final Color color;
@@ -16,29 +24,37 @@ class SpaceCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.totalBalance,
-    required this.budget,
+    required this.spendingLimit,
     required this.used,
+    required this.memberCount,
+    required this.limitCycle,
     required this.expanded,
     required this.onTap,
     required this.color,
   });
 
   final currencyFormatter =
-    NumberFormat.currency(
-      locale: "id_ID",
-      symbol: "Rp ",
-      decimalDigits: 0,
-    );
+      NumberFormat.currency(
+    locale: "id_ID",
+    symbol: "Rp ",
+    decimalDigits: 0,
+  );
 
   @override
   Widget build(BuildContext context) {
+    final progress =
+        spendingLimit <= 0
+            ? 0.0
+            : (used / spendingLimit)
+                .clamp(0.0, 1.0);
+
+    final remaining =
+        spendingLimit - used;
 
     return GestureDetector(
-
       onTap: onTap,
 
       child: AnimatedContainer(
-
         duration: const Duration(
           milliseconds: 500,
         ),
@@ -47,13 +63,12 @@ class SpaceCard extends StatelessWidget {
             Curves.easeOutCubic,
 
         child: Column(
-
           children: [
-
+            // ======================
             // TOP CARD
+            // ======================
 
             Container(
-
               height: 82,
 
               padding:
@@ -63,17 +78,14 @@ class SpaceCard extends StatelessWidget {
 
               decoration:
                   BoxDecoration(
-
                 color: color,
 
                 borderRadius:
                     const BorderRadius.only(
-
                   topLeft:
                       Radius.circular(
                     28,
                   ),
-
                   topRight:
                       Radius.circular(
                     28,
@@ -81,14 +93,11 @@ class SpaceCard extends StatelessWidget {
                 ),
 
                 boxShadow: [
-
                   BoxShadow(
-
                     color:
                         color.withOpacity(
                       .25,
                     ),
-
                     blurRadius: 25,
                     spreadRadius: 1,
                   ),
@@ -96,36 +105,25 @@ class SpaceCard extends StatelessWidget {
               ),
 
               child: Row(
-
                 children: [
-
-                  // group icon
-
                   Container(
-
                     width: 46,
                     height: 46,
 
                     decoration:
                         BoxDecoration(
-
                       color:
                           Colors.white
                               .withOpacity(
                         .95,
                       ),
-
                       shape:
                           BoxShape.circle,
                     ),
 
-                    child:
-                        Icon(
-
+                    child: Icon(
                       Icons.groups_rounded,
-
-                      color:
-                          color,
+                      color: color,
                     ),
                   ),
 
@@ -134,9 +132,7 @@ class SpaceCard extends StatelessWidget {
                   ),
 
                   Expanded(
-
                     child: Column(
-
                       mainAxisAlignment:
                           MainAxisAlignment
                               .center,
@@ -146,24 +142,22 @@ class SpaceCard extends StatelessWidget {
                               .start,
 
                       children: [
-
                         Text(
-
                           title,
+
+                          maxLines: 1,
+
+                          overflow:
+                              TextOverflow
+                                  .ellipsis,
 
                           style:
                               const TextStyle(
-
-                            fontSize:
-                                17,
-
+                            fontSize: 17,
                             fontWeight:
-                                FontWeight
-                                    .bold,
-
+                                FontWeight.bold,
                             color:
-                                Colors
-                                    .white,
+                                Colors.white,
                           ),
                         ),
 
@@ -172,15 +166,11 @@ class SpaceCard extends StatelessWidget {
                         ),
 
                         Text(
-
-                          "3 members",
+                          "$memberCount members",
 
                           style:
                               TextStyle(
-
-                            fontSize:
-                                12,
-
+                            fontSize: 12,
                             color:
                                 Colors.white
                                     .withOpacity(
@@ -193,7 +183,6 @@ class SpaceCard extends StatelessWidget {
                   ),
 
                   Column(
-
                     mainAxisAlignment:
                         MainAxisAlignment
                             .center,
@@ -203,37 +192,28 @@ class SpaceCard extends StatelessWidget {
                             .end,
 
                     children: [
-
                       Text(
-
-                        currencyFormatter.format(
+                        currencyFormatter
+                            .format(
                           totalBalance,
                         ),
 
                         style:
                             const TextStyle(
-
                           fontSize: 17,
-
                           fontWeight:
-                              FontWeight
-                                  .bold,
-
+                              FontWeight.bold,
                           color:
                               Colors.white,
                         ),
                       ),
 
                       Text(
-
-                        "Total Balance",
+                        "Balance",
 
                         style:
                             TextStyle(
-
-                          fontSize:
-                              11,
-
+                          fontSize: 11,
                           color:
                               Colors.white
                                   .withOpacity(
@@ -247,10 +227,11 @@ class SpaceCard extends StatelessWidget {
               ),
             ),
 
+            // ======================
             // EXPAND AREA
+            // ======================
 
             AnimatedSize(
-
               duration:
                   const Duration(
                 milliseconds: 500,
@@ -260,9 +241,7 @@ class SpaceCard extends StatelessWidget {
                   Curves.easeOutCubic,
 
               child: expanded
-
                   ? Container(
-
                       width:
                           double.infinity,
 
@@ -273,7 +252,6 @@ class SpaceCard extends StatelessWidget {
 
                       decoration:
                           const BoxDecoration(
-
                         color:
                             Color(
                           0xFF171717,
@@ -281,12 +259,10 @@ class SpaceCard extends StatelessWidget {
 
                         borderRadius:
                             BorderRadius.only(
-
                           bottomLeft:
                               Radius.circular(
                             28,
                           ),
-
                           bottomRight:
                               Radius.circular(
                             28,
@@ -295,23 +271,18 @@ class SpaceCard extends StatelessWidget {
                       ),
 
                       child: Column(
-
                         children: [
-
                           Row(
-
                             mainAxisAlignment:
                                 MainAxisAlignment
                                     .spaceBetween,
 
                             children: [
-
-                              const Text(
-
-                                "Monthly Budget",
+                              Text(
+                                "$limitCycle Limit",
 
                                 style:
-                                    TextStyle(
+                                    const TextStyle(
                                   color:
                                       Colors
                                           .white70,
@@ -319,14 +290,16 @@ class SpaceCard extends StatelessWidget {
                               ),
 
                               Text(
-
-                                "$used / $budget",
+                                "${currencyFormatter.format(used)} / ${currencyFormatter.format(spendingLimit)}",
 
                                 style:
                                     const TextStyle(
                                   color:
                                       Colors
                                           .white,
+                                  fontWeight:
+                                      FontWeight
+                                          .w600,
                                 ),
                               ),
                             ],
@@ -337,7 +310,6 @@ class SpaceCard extends StatelessWidget {
                           ),
 
                           ClipRRect(
-
                             borderRadius:
                                 BorderRadius.circular(
                               50,
@@ -345,9 +317,8 @@ class SpaceCard extends StatelessWidget {
 
                             child:
                                 LinearProgressIndicator(
-
                               value:
-                                  .58,
+                                  progress,
 
                               minHeight:
                                   10,
@@ -364,39 +335,82 @@ class SpaceCard extends StatelessWidget {
                           ),
 
                           const SizedBox(
+                            height: 12,
+                          ),
+
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment
+                                    .spaceBetween,
+
+                            children: [
+                              Text(
+                                "${(progress * 100).toStringAsFixed(0)}% used",
+
+                                style:
+                                    const TextStyle(
+                                  color:
+                                      Colors
+                                          .white70,
+                                  fontSize:
+                                      12,
+                                ),
+                              ),
+
+                              Text(
+                                "${currencyFormatter.format(
+                                  remaining < 0
+                                      ? 0
+                                      : remaining,
+                                )} left",
+
+                                style:
+                                    const TextStyle(
+                                  color:
+                                      Colors
+                                          .white,
+                                  fontWeight:
+                                      FontWeight
+                                          .w600,
+                                  fontSize:
+                                      12,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(
                             height: 25,
                           ),
 
                           Align(
-
                             alignment:
-                                Alignment.centerRight,
+                                Alignment
+                                    .centerRight,
 
                             child:
                                 TextButton(
-
                               onPressed:
                                   () {},
 
-                              child:
-                                  Text(
-
+                              child: Text(
                                 "View Details",
 
                                 style:
                                     TextStyle(
-                                  color:
-                                      color,
+                                  color: color,
+                                  fontWeight:
+                                      FontWeight
+                                          .w600,
                                 ),
                               ),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     )
-
                   : const SizedBox(),
-            )
+            ),
           ],
         ),
       ),

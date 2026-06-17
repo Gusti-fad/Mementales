@@ -436,89 +436,64 @@ Future<void> loadSpaces() async {
                                                 ),
                                               ],
                                             ),
+                                            Container(
+                                              height: 56,
+                                              alignment:
+                                                  Alignment.topCenter,
+                                              decoration: BoxDecoration(
+                                                color: AppColors.background,
 
-                                            InkWell(
-
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                30,
                                               ),
-
-                                              onTap:
-                                                  () async {
-
-                                                await Navigator.push(
-                                                  context,
-
-                                                  MaterialPageRoute(
-                                                    builder:
-                                                        (_) =>
-                                                            const CreateSpacePage(),
-                                                  ),
-                                                );
-
-                                                loadSpaces();
-                                              },
-
-                                              child:
-                                                  Padding(
-
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                  horizontal:
-                                                      20,
-                                                  vertical:
-                                                      12,
+                                              child: InkWell(
+                                                borderRadius: BorderRadius.circular(
+                                                  28,
                                                 ),
-
-                                                child:
-                                                    Row(
-
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-
-                                                  children: [
-
-                                                    Icon(
-                                                      Icons.add_circle_rounded,
-
-                                                      size:
-                                                          18,
-
-                                                      color:
-                                                          AppColors.primary,
+                                                onTap: () async {
+                                                  await Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (_) =>
+                                                          const CreateSpacePage(),
                                                     ),
+                                                  );
 
-                                                    const SizedBox(
-                                                      width:
-                                                          8,
-                                                    ),
-
-                                                    Text(
-
-                                                      "Add New Space",
-
-                                                      style:
-                                                          TextStyle(
+                                                  loadSpaces();
+                                                },
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                    horizontal: 0,
+                                                    vertical: 0,
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.center,
+                                                    children: [
+                                                      Icon(
+                                                        Icons.add_circle_rounded,
+                                                        size: 20,
                                                         color:
                                                             AppColors.primary,
-
-                                                        fontWeight:
-                                                            FontWeight.w600,
-
-                                                        fontSize:
-                                                            15,
                                                       ),
-                                                    ),
-                                                  ],
+                                                      const SizedBox(
+                                                        width: 10,
+                                                      ),
+                                                      Text(
+                                                        "Add New Space",
+                                                        style: TextStyle(
+                                                          color:
+                                                              AppColors.primary,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontSize: 15,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             ),
 
-                                            const SizedBox(
-                                              height:
-                                                  100,
-                                            ),
                                           ],
                                         );
                                       }
@@ -562,40 +537,33 @@ Future<void> loadSpaces() async {
                                                   AppColors.background,
 
                                               child:
-                                                  SpaceCard(
+                                                SpaceCard(
+                                                  title: space.name,
 
-                                                title:
-                                                    space.name,
+                                                  totalBalance:
+                                                      space.balance,
 
-                                                totalBalance:
-                                                    space.budget,
+                                                  spendingLimit:
+                                                      space.spendingLimit,
 
-                                                budget:
-                                                    space.budget,
+                                                  used: 0,
 
-                                                used:
-                                                    0,
+                                                  memberCount:
+                                                      space.members.length,
 
-                                                color:
-                                                    AppColors.primary,
+                                                  limitCycle:
+                                                      space.limitCycle,
 
-                                                expanded:
-                                                    expanded,
+                                                  color:
+                                                      space.color,
 
-                                                onTap:
-                                                    () {
+                                                  expanded:
+                                                      expanded,
 
-                                                  setState(
-                                                    () {
-
-                                                      expandedIndex =
-                                                          expanded
-                                                              ? -1
-                                                              : index;
-                                                    },
-                                                  );
-                                                },
-                                              ),
+                                                  onTap: () {
+                                                    
+                                                  },
+                                                ),
                                             ),
                                           ),
 
@@ -638,7 +606,7 @@ Future<void> loadSpaces() async {
                                                     BoxShadow(
 
                                                       color:
-                                                          AppColors.primary.withOpacity(
+                                                          space.color.withOpacity(
                                                         .35,
                                                       ),
 
